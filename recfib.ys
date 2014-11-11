@@ -1,0 +1,53 @@
+#Recusive fib
+
+.pos 0
+
+init:   irmovl Stack, %esp      # Initialize stack ptr
+        irmovl Stack, %ebp      # Initialize base ptr
+        call Main               # Call Main
+        halt                    # Terminate
+                                
+
+Main:   pushl %ebp              # Push the base pointer on stack
+        rrmovl %esp,%ebp        # Store stack pointer in base pointer 
+        irmovl $2,%eax          # Initalized parameter of literal value 2
+        pushl %eax              # Push 2, stored in %eax, onto the stack
+        call Fib                # Call Fib(2)
+        rrmovl %eax, %ebx       # Save result of Fib(2) in %ebx
+        irmovl $10, %edx        # 10 is our second parameter
+        pushl %edx              # Push parameter onto the stack
+        call Fib                # Call Fib(10)
+        rrmovl %ebp,%esp        # Move base ptr to stack ptr
+        popl %ebp               # Jump or pop back to init
+        ret                     # Return 
+
+# int Fib(int n)
+Fib:    pushl %ebp              # Push the base ptr onto stack
+        rrmovl %esp,%ebp        # Move stack ptr to base ptr
+        pushl %ebx              # Used to save Fib(n-2) result 
+       
+        mrmovl 8(%ebp),%ecx     # Initialize parameter
+        irmovl $2, %eax         # Check if param is base case
+        cmovl %ecx, %eax        # Test the base case n<2? If so, moves return into eax
+        jl End                  # Funct is done; jump to end
+        
+        irmovl $-1,%edx         # Used as a decrementor 
+        addl %edx, %ecx         # Decrement %ecx (n-1) times
+        pushl %ecx              # Push %ecx (our param) onto stack
+        call Fib                # Call fib (n-1) 
+        
+        popl %ecx               # Restore value of %ecx to (n - 1)
+        rrmovl %eax, %ebx       # Move fib(n-1) into ebx
+        addl %edx, %ecx         # n = n - 2
+        pushl %ecx              # Push %ecx into our fib for call
+        call Fib                # Call next sequence - Fib(n-2)
+        addl %ebx, %eax         # Saves our sequence Fib(n - 1) + Fib(n - 2) into %eax before popping value off the stack
+
+End:
+        popl %ebx               # Pop ebx
+        rrmovl %ebp,%esp        # Move base pointer back to stack pointer
+        popl %ebp               # Get the return address
+        ret                     # Return to address
+
+    .pos 0x500
+Stack:

@@ -1,0 +1,55 @@
+# Adam Pond
+# Homework 3
+# CIS 314, 11/18/2013
+
+# Execution begins at address 0
+    .pos 0
+init:   irmovl Stack, %esp      # Setup stack pointer
+        irmovl Stack, %ebp      # Set up base pointer
+        call Main               # Execute main program
+        halt                    # Terminate program
+                                # Extra line since halt wasn't working
+
+Main:   pushl %ebp              # Push the base pointer so we can get back to init
+        rrmovl %esp,%ebp        # Move the stack pointer to the base pointer 
+        irmovl $2,%eax          # Move 2 into %eax so we can push it on the stack
+        pushl %eax              # Push 2 on the stack so we can call fib
+        call Fib                # Fib(2)
+        rrmovl %eax, %ebx       # Save result of Fib(2) in %ebx
+        irmovl $15, %edx        # Move 15 into %dex sp we can push it on the stack
+        pushl %edx              # Push 15 on the stack so we can call fib
+        call Fib                # Fib(15)
+        rrmovl %ebp,%esp        # Move the base pointer to the stack pointer
+        popl %ebp               # Pop the base pointer to get the address back to init
+        ret                     # Return to address pointed by base pointer
+
+# int Fib(int n)
+Fib:    pushl %ebp              # Push the base pointer so we can get back to address after call
+        rrmovl %esp,%ebp        # Move the stack pointer to the base pointer
+        pushl %ebx              # Push %ebx so that we can save fib(2) result in it 
+        mrmovl 8(%ebp),%ecx     # Setup %ecx = n
+        irmovl $2, %eax         # Move 2 into %eax so that we can use it to check n<2
+        cmovl %ecx, %eax        # If n is less than 2
+        jl End                  # Fib is done, jump to the end.
+        irmovl $1,%eax          # Else we need to loop set Sum = 1
+        xorl %ebx, %ebx         # Clearing %ebx
+        subl %eax, %ecx         # We decrement n before we start the loop
+
+Loop:   
+        irmovl $-1, %edx        # Set %edx to -1 so we can use it to decrement %ecx
+        addl %edx, %ecx         # Decrement n 
+        rrmovl %eax, %edx       # Move Fib(n) into %eax
+        addl %ebx, %eax         # Compute F(n) + F(n-1) =  F(n+1)
+        rrmovl %edx, %ebx       # Move Fib(n) into %ebx
+        andl %ecx, %ecx         # Check if n = 0
+        jne Loop                # Stop when n = 0
+
+End:
+        popl %ebx               # Pop %ebx and return its pushed value
+        rrmovl %ebp,%esp        # Move the base pointer back to the stack pointer
+        popl %ebp               # Pop the base pointer to return to address in Main after call
+        ret                     # Return to address
+
+# The stack starts here and grows to lower addresses
+    .pos 0x100
+Stack:
